@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advait Kinikar — Robotics Engineer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#161e28;font-family:'Rajdhani',sans-serif;overflow:hidden;height:100vh;width:100vw}
+canvas{display:block}
+#c{position:fixed;inset:0}
+#topbar{position:fixed;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(12,16,22,0.90);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,0.06);z-index:20}
+#tname{font-family:'Share Tech Mono',monospace;font-size:15px;color:#90bcd8;letter-spacing:.10em}
+#trole{font-size:11px;color:#3a5060;letter-spacing:.18em;text-transform:uppercase}
+#info-panel{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:50;background:rgba(5,10,18,0.72);backdrop-filter:blur(6px);transition:opacity .4s;cursor:pointer;}
+#info-panel.hidden{opacity:0;pointer-events:none}
+#info-panel-inner{position:relative;background:rgba(10,16,26,0.98);border:1px solid rgba(74,128,184,0.22);border-top:3px solid #4a80b8;padding:48px 56px 44px;width:min(820px,88vw);max-height:82vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.75);cursor:default;}
+#panel-close{position:absolute;top:16px;right:18px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#3a5060;letter-spacing:.14em;background:none;border:1px solid rgba(74,128,184,0.20);padding:4px 10px;cursor:pointer;border-radius:2px;transition:all .2s;}
+#panel-close:hover{color:#fff;border-color:#4a80b8;background:rgba(74,128,184,0.18);}
+.pl{font-family:'Share Tech Mono',monospace;font-size:11px;color:#4a80b8;letter-spacing:.26em;margin-bottom:10px;text-transform:uppercase}
+.pt{font-size:32px;font-weight:700;color:#d0dce8;line-height:1.15;margin-bottom:18px;font-family:'Rajdhani',sans-serif;letter-spacing:.02em}
+.pb{font-size:17px;line-height:1.78;color:#8fa8bc;margin-bottom:24px;max-width:680px}
+.tags{display:flex;flex-wrap:wrap;gap:7px}
+.tag{font-family:'Share Tech Mono',monospace;font-size:11px;padding:5px 12px;background:rgba(74,128,184,0.10);border:1px solid rgba(74,128,184,0.30);color:#4a80b8;border-radius:2px;letter-spacing:.06em}
+#sbar{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-family:'Share Tech Mono',monospace;font-size:9px;color:#3a5060;letter-spacing:.14em;z-index:20;text-align:center}
+#pbar{position:fixed;top:50px;left:0;height:2px;background:linear-gradient(to right,#4a80b8,#6aa0c8);transition:width .5s ease;z-index:20}
+.stlabel{position:fixed;pointer-events:all;transform:translate(-50%,-50%);z-index:15;cursor:pointer;text-align:center;transition:opacity .3s}
+.stlabel .sln{font-family:'Share Tech Mono',monospace;font-size:10px;color:#708898;letter-spacing:.12em;text-transform:uppercase;background:rgba(10,14,22,0.80);padding:3px 10px;border-radius:2px;border:1px solid rgba(255,255,255,0.06);white-space:nowrap;transition:all .2s}
+.stlabel:hover .sln,.stlabel.hover .sln{color:#c8dce8;background:rgba(74,128,184,0.28);border-color:rgba(74,128,184,0.40)}
+.stlabel.active .sln{color:#fff;background:rgba(74,128,184,0.48);border-color:#4a80b8}
+.stlabel.visited .sln{color:#5a9870;border-color:rgba(90,152,112,0.32)}
+.stlabel .slt{font-size:8px;color:#3a5060;letter-spacing:.08em;display:block;margin-top:2px;font-family:'Share Tech Mono',monospace}
+.stlabel.hover .slt,.stlabel:hover .slt{color:#4a80b8}
+#intro{position:fixed;inset:0;background:#161e28;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .7s}
+#intro.fade{opacity:0;pointer-events:none}
+.igg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:48px 48px}
+.iit{font-family:'Share Tech Mono',monospace;font-size:clamp(20px,4vw,44px);color:#c0d0e0;letter-spacing:.10em;margin-bottom:4px;position:relative}
+.iis{font-size:12px;color:#3a5060;letter-spacing:.22em;text-transform:uppercase;margin-bottom:40px;position:relative}
+.iib{background:rgba(20,28,40,0.95);border:1px solid rgba(74,128,184,0.38);color:#7ab0d0;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.18em;padding:11px 34px;cursor:pointer;text-transform:uppercase;transition:all .22s;border-radius:2px;position:relative}
+.iib:hover{background:#4a80b8;color:#fff;border-color:#4a80b8}
+#hint{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);font-family:'Share Tech Mono',monospace;font-size:9px;color:#3a5060;letter-spacing:.14em;z-index:20;transition:opacity .5s;text-align:center}
+#hint.hide{opacity:0}
+
+/* ── INSTRUCTIONS OVERLAY ── */
+#instructions{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:90;pointer-events:none;opacity:0;transition:opacity .5s}
+#instructions.show{opacity:1;pointer-events:all}
+#instr-box{background:rgba(10,16,26,0.97);border:1px solid rgba(74,128,184,0.25);border-top:2px solid #4a80b8;padding:32px 36px;max-width:480px;width:90%;backdrop-filter:blur(16px);box-shadow:0 8px 40px rgba(0,0,0,0.6)}
+#instr-box h2{font-family:'Share Tech Mono',monospace;font-size:12px;color:#4a80b8;letter-spacing:.28em;text-transform:uppercase;margin-bottom:20px}
+.instr-row{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+.instr-icon{width:32px;height:32px;border:1px solid rgba(74,128,184,0.30);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#4a80b8;background:rgba(74,128,184,0.08)}
+.instr-text{font-size:13px;color:#7a8a9a;line-height:1.55}
+.instr-text strong{color:#b8c8d8;font-weight:600}
+#instr-close{margin-top:24px;width:100%;background:rgba(74,128,184,0.15);border:1px solid rgba(74,128,184,0.35);color:#7ab0d0;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.18em;padding:10px;cursor:pointer;text-transform:uppercase;transition:all .22s;border-radius:2px}
+#instr-close:hover{background:#4a80b8;color:#fff}
+/* help button */
+#help-btn{position:fixed;top:12px;right:22px;width:28px;height:28px;border-radius:50%;background:rgba(20,30,44,0.90);border:1px solid rgba(74,128,184,0.30);color:#5a80a0;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:25;transition:all .2s;margin-top:11px}
+#help-btn:hover{background:#4a80b8;color:#fff;border-color:#4a80b8}
+
+/* ── RICH PANEL CONTENT ── */
+.pb p{margin-bottom:12px;font-size:16px;line-height:1.75;color:#8fa8bc}
+.pb p:last-child{margin-bottom:0}
+.pb-section{margin:16px 0;padding:12px 16px;border-left:2px solid rgba(74,128,184,0.35);background:rgba(74,128,184,0.05);border-radius:0 4px 4px 0}
+.pb-label{display:block;font-family:'Share Tech Mono',monospace;font-size:10px;color:#4a80b8;letter-spacing:.22em;text-transform:uppercase;margin-bottom:8px}
+.pb-list{list-style:none;padding:0;margin:0}
+.pb-list li{font-size:14px;color:#7a9ab0;padding:3px 0;padding-left:14px;position:relative;line-height:1.6}
+.pb-list li::before{content:'›';position:absolute;left:0;color:#4a80b8}
+.pb-link-inline{color:#6aaad8;text-decoration:none;transition:color .2s}
+.pb-link-inline:hover{color:#90caf9}
+.pb-media-row{display:flex;gap:14px;margin:18px 0;flex-wrap:wrap}
+.pb-media-item{flex:1;min-width:220px;background:rgba(10,18,28,0.8);border:1px solid rgba(74,128,184,0.18);border-radius:4px;overflow:hidden}
+.pb-media-item.pb-media-wide{flex:0 0 100%}
+.pb-media-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:#3a6070;letter-spacing:.18em;text-transform:uppercase;padding:6px 10px;background:rgba(5,12,22,0.7);border-bottom:1px solid rgba(74,128,184,0.12)}
+.pb-img{width:100%;display:block;object-fit:cover;max-height:260px}
+.pb-video{width:100%;height:220px;border:none;display:block}
+.pb-link{display:inline-block;margin:6px 8px 0 0;padding:6px 14px;background:rgba(74,128,184,0.12);border:1px solid rgba(74,128,184,0.32);color:#6aaad8;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.12em;text-decoration:none;border-radius:2px;transition:all .2s}
+.pb-link:hover{background:#4a80b8;color:#fff;border-color:#4a80b8}
+</style>
+</head>
+<body>
+<div id="intro">
+  <div class="igg"></div>
+  <div class="iit">ADVAIT KINIKAR</div>
+  <div class="iis">Robotics · Navigation · Autonomy</div>
+  <button class="iib" onclick="startPortfolio()">START</button>
+</div>
+<div id="c"></div>
+<div id="topbar">
+  <div id="tname">ADVAIT_KINIKAR.exe</div>
+  <div id="trole">M.Eng Robotics · UMD 2025</div>
+</div>
+<div id="pbar" style="width:0%"></div>
+<div id="info-panel" class="hidden" onclick="handlePanelBackdrop(event)">
+  <div id="info-panel-inner">
+    <button id="panel-close" onclick="document.getElementById('info-panel').classList.add('hidden')">ESC / CLOSE</button>
+    <div class="pl" id="ipl">—</div>
+    <div class="pt" id="ipt">—</div>
+    <div class="pb" id="ipb">—</div>
+    <div class="tags" id="iptags"></div>
+  </div>
+</div>
+<div id="sbar">READY</div>
+<div id="hint">CLICK A STATION TO BEGIN</div>
+
+<!-- Instructions overlay -->
+<div id="instructions">
+  <div id="instr-box">
+    <h2>HOW TO NAVIGATE</h2>
+    <div class="instr-row">
+      <div class="instr-icon">🖱</div>
+      <div class="instr-text"><strong>Click any crate</strong> to send the object there. The robot at the current station picks it up, places it on the conveyor belt, and the robot at your chosen station receives it.</div>
+    </div>
+    <div class="instr-row">
+      <div class="instr-icon">↔</div>
+      <div class="instr-text"><strong>Drag left / right</strong> to orbit the camera around the scene. <strong>Scroll</strong> to zoom in or out.</div>
+    </div>
+    <div class="instr-row">
+      <div class="instr-icon">🏷</div>
+      <div class="instr-text"><strong>Station labels</strong> appear above each crate. Hover to highlight, click to visit. Green labels = already visited.</div>
+    </div>
+    <div class="instr-row">
+      <div class="instr-icon">📋</div>
+      <div class="instr-text"><strong>Info panel</strong> on the right shows the project description after each delivery. The object starts at <strong>Station 1 — About Me</strong>.</div>
+    </div>
+    <button id="instr-close" onclick="closeInstr()">GOT IT — START EXPLORING</button>
+  </div>
+</div>
+
+<button id="help-btn" onclick="openInstr()" title="How to navigate">?</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════
+const STATIONS=[
+  {label:'ABOUT ME', title:'About Me', body:`<p>Hello! I am Advait Kinikar, a robotics engineer with a master's degree in robotics from the University of Maryland, College Park. I build software for autonomous mobile robots, with hands-on experience across the full navigation stack, from writing ROS2 nodes to tuning Nav2 behaviors to debugging hardware in the field.</p><p>I am currently working at a startup, where I work on AMRs. I have worked on the robot teleoperation and navigation stack. I have also worked on hardware bring-up and debugging, which has exposed me to software development as well as practical realities of deploying robots.</p><p>As a part of my curriculum, I have been exposed to all the fundamentals of a robotics system such as perception, planning, controls, kinematics, dynamics, state-estimation, localization. Individually, I have worked on some projects in planning and kinematics which are described in this site.</p><p>I enjoy working on problems which have real physical consequences. I am actively looking for full-time roles in robotics software engineering, autonomous navigation, motion planning, robotics applications or field robotics.</p><div class="pb-section"><span class="pb-label">Get in Touch</span><ul class="pb-list"><li><a href="mailto:kinikaradvait26@gmail.com" class="pb-link-inline">Email</a></li><li><a href="https://www.linkedin.com/in/advaitk26" target="_blank" class="pb-link-inline">Linkedin</a></li><li><a href="https://github.com/akin2662" target="_blank" class="pb-link-inline">Github</a></li><li><a href="https://calendly.com/kinikaradvait26/chat-with-advait" target="_blank" class="pb-link-inline">Schedule a meeting</a></li></ul></div>`, tags:['ROS2/Nav2/MoveIt2','SLAM','Path Planning','Python/C++','Jetson Orin/LiDAR/IMU/Depth Cameras/Motor Controllers','SolidWorks/Fusion 360/AutoCAD','Linux/Shell Scripting','PLC Programming/Ladder Logic Diagrams'], color:0x4a80b8},
+
+  {label:'APF+RRT PLUGIN', title:'Custom Nav2 Plugin: APF+ RRT Path Planner', body:`<p>My goal was to take a research inspired planning algorithm and actually deploy it on a robot. Not just run it as a standalone script, but integrate it into ROS2's Nav2 navigation stack so a real robot could use it for autonomous navigation. The goal was to go from algorithm to working robotics software.</p><p>The specific target was to implement RRT-Connect with Artificial Potential Field guidance as a Nav2 global planner plugin for ROS2 Humble, tested on a Turtlebot3 in Gazebo simulation. The planner needed to find collision-free paths quickly, read obstacles from the live Nav2 costmap, and replan automatically when something new blocked the robot's path.</p><p>I started with the implementation of RRT-Connect with APF in Python and fixed several bugs in the original code before going further. Once the algorithm was solid, I started integrating it into Nav2. The first major problem I ran into is that Nav2's plugin system only loads C++ shared libraries. Python plugins are simply not supported. So I wrote a C++ wrapper class that implements the Nav2 GlobalPlanner interface and calls the Python planning code through a ROS2 service. The C++ side handles everything Nav2 expects, and the Python side handles all the actual planning. The Python service reads the occupancy grid, converts it to obstacle rectangles, runs the planner, and sends back a nav_msgs/Path. I also added path caching so the planner only runs once per goal and only replans when the cached path gets blocked by an obstacle. The launch file starts the Python service node before Nav2 so the C++ plugin finds the service ready during startup.</p><p>Nothing worked on the first try. The pluginlib system could not find the plugin even though everything looked correct in plugin.xml and package.xml. The Python package import failed at runtime with a module not found error. The navigation stack had a persistent TF transform failure where the controller could not convert paths between coordinate frames. That one took a long time to understand. The root cause was that AMCL was running without use_sim_time enabled, so it was stamping transforms with Unix wall clock time while Nav2 was reading Gazebo simulation time. The difference between those two timestamps was over 49000 hours so the TF lookup would never succeed. On top of that, Gazebo was running at about 10% of real time on my machine, which caused transform buffer gaps that made the controller fail partway through navigation.</p><p>I worked through each issue one at a time. The pluginlib discovery failure came down to an empty ament index registration file. The file existed but had no content, so I wrote the correct plugin path into it manually through a CMake install command. The Python import error was a duplicate CMake target conflict caused by rosidl's interface generation internally calling the same install function I was calling explicitly. I replaced the explicit call with manual directory install commands to avoid the collision. The TF timing issue I found by comparing the /clock topic output against the actual transform timestamps using tf2_echo. Seeing a Unix timestamp on one side and a simulation timestamp on the other made the problem obvious. Fixing it was just adding a complete AMCL params block with use_sim_time: True to the params file, which had been missing entirely. For the slow Gazebo clock I increased transform_tolerance across all Nav2 nodes and reduced the controller frequency to match the actual simulation rate.</p><p>The system works. The plugin loads correctly, plans paths in around 35ms on average, and the robot navigates from start to goal in Gazebo simulation. It replans when an obstacle appears in the path. The planning core has no ROS2 dependencies so it can be tested or reused completely independently from Nav2, which made debugging significantly easier throughout the project.</p><p>This project taught me how robotics software gets integrated in practice. Writing the C++ wrapper, debugging the build system, tracing a navigation failure through the TF tree back to a single missing config parameter. I came in knowing ROS2 concepts and left understanding how the pieces actually connect and fail and how to fix them when they do.</p><div class="pb-media-row"><div class="pb-media-item"><div class="pb-media-label">2D Photo of the planner</div><img src="https://drive.google.com/thumbnail?id=1_9YtQR3I34QaCRizXXan4oS-ARED_7B1&sz=w800" alt="APF+RRT 2D Path" class="pb-img"></div><div class="pb-media-item"><div class="pb-media-label">Video Link</div><iframe src="https://drive.google.com/file/d/1_0Tn8NCuhYe3tkSEEy9UtCTKNoestbSg/preview" class="pb-video" allow="autoplay" allowfullscreen></iframe></div></div><a href="https://github.com/akin2662/Artificial-Potential-Fields-with-RRT-Connect.git" target="_blank" class="pb-link">Github &rarr;</a>`, tags:[], color:0x6a9840},
+
+  {label:'RL AGENT', title:'RL Agent for game with varying opponent strategies', body:`<p>The goal of this project was to build a reinforcement learning agent capable of playing Ashtachamma, an ancient Indian board game similar to Ludo, against opponents that use fundamentally different strategies. Most RL research trains agents against a single fixed opponent type, which limits how well the agent generalizes. Here, the agent had to simultaneously learn to handle a random player, an aggressive player that hunts down your pawns, and a defensive player that prioritizes safety and safe zones. The broader motivation was that real-world autonomous systems face exactly this kind of variability, and building something that holds up across changing conditions is more meaningful than a narrow benchmark.</p><p>The specific aim was to train an agent using PPO and DQN that consistently outperforms a random-move baseline in terms of win rate, while also holding its own against the more strategic opponents. Win rate was the primary metric, with training curves like episode reward, value loss, policy gradient loss, and explained variance used to confirm the agent was actually learning rather than just getting lucky.</p><p>The project was built from the ground up in Python. The game board, player paths, safe zones, and kill mechanics were implemented in a custom class. Three opponent types were coded with distinct decision logic: the aggressive player always prioritizes moves that kill opponent pawns, the defensive player avoids positions where opponents can reach it within a dice roll, and the random player just picks any legal move. Once the game logic was validated through a standalone test run using Pygame, a custom Gymnasium environment was wrapped around it to make it compatible with Stable-Baselines3. The RL agent was trained with PPO and DQN separately, with Optuna used to search for good hyperparameters. Training ran for 7.5 million timesteps for PPO and 8 million for DQN, taking roughly 3 hours per run on 2 pawns per player. TensorBoard was used throughout to track learning progress.</p><p>Several significant bugs surfaced during development. The most damaging was a strategy order mismatch between the environment's init and reset functions: the aggressive and defensive players were swapping positions every episode, meaning the agent was unknowingly training against a different opponent configuration after each reset. Another issue was the observation space being declared as shape (4, 50) when the actual state encoding only used (4, 2), with the remaining 96% of the tensor filled with a sentinel value, confusing the neural network. The risk penalty in the reward function was computing Manhattan grid distance between pawns, which is meaningless on a winding spiral path where two cells that are 6 grid steps apart could be 20+ path steps away from each other. The board's move function also had an unbounded re-roll loop that could silently hang training if a pawn got stuck near the end of the path. On top of this, kill detection was being read from a mutable player flag that persisted across turns rather than being returned directly from the move function, which occasionally triggered false kill rewards. All of these were identified through careful code review and fixed systematically.</p><p>After training, the RL agent consistently outperformed the random player baseline across both PPO and DQN experiments. In the best PPO run, the agent scored 22 total points (10 partial wins, 6 complete wins, 4 losses) compared to the random player's 6 points (6 partial wins, 0 complete wins, 14 losses). The agent performed comparably to the defensive player, suggesting it had developed a balanced strategy rather than just memorizing aggressive play. The DQN experiment with 4 pawns (DQN 17) achieved the highest win rate overall, with training loss and accumulated reward curves both showing healthy learning trends: loss decreasing then stabilizing, reward gradually increasing over episodes.</p><p>This project demonstrates that RL agents can adapt to multi-strategy opponents in a stochastic board game environment without being hand-coded for each situation. The architecture, a custom Gymnasium environment with a structured reward function wrapping a real game implementation, is a pattern directly applicable to AMR navigation scenarios where a robot has to handle unpredictable human behavior, changing floor conditions, or other agents with different movement patterns. The debugging process also reinforced how critical environment correctness is before any training happens: a subtle bug in reset or state encoding can silently degrade hundreds of hours of training without any obvious error message.</p><div class="pb-media-row"><div class="pb-media-item pb-media-wide"><div class="pb-media-label">Link to GIF</div><iframe src="https://drive.google.com/file/d/1k7oHz3jZx5jsaFqTeq5hVS-ex_xmrg3s/preview" class="pb-video" allow="autoplay" allowfullscreen></iframe></div></div><a href="https://github.com/akin2662/Reinforcement-Learning-agent-for-Ashtachamma-game-with-varying-opponent-strategies.git" target="_blank" class="pb-link">Github &rarr;</a>`, tags:[], color:0x9a4088},
+
+  {label:'KINEMATIC PLANNER', title:'Kinematically constrained Path Planning and simulation of a differential drive robot', body:`<p>The goal was to implement A* search for a differential-drive robot (TurtleBot3 Waffle) operating in a continuous 2D environment with obstacles, and then bridge that plan directly to a physical ROS2 simulation in Gazebo. The robot's motion model is not simplified to grid steps or straight lines. Instead, it uses actual wheel RPM combinations to generate curved trajectories, so the planner had to account for the real kinematics of the robot at every step of the search.</p><p>First, I did a standalone Python implementation of A* with a differential-drive action space. Then I extended this into a full ROS2 pipeline where the computed path was executed on a TurtleBot3 in Gazebo by publishing Twist commands to /cmd_vel. The aim was to go from algorithm on paper all the way to a robot that actually moves along the planned path in simulation, which is the exact workflow used in real AMR development.</p><p>The state space was defined as (x, y, &theta;) in continuous coordinates, discretized using a 5 cm position threshold and 30&deg; angular resolution for visited-node checking. Obstacles were defined analytically using half-plane and circle equations and rasterized into a NumPy pixel map. A clearance buffer inflated every obstacle boundary by the robot's radius plus a user-defined safety margin. The A* heuristic was weighted Euclidean distance (heuristic weight of 5), making it more greedy to reduce runtime. Each node expansion tried 8 wheel RPM combinations (forward, turning, pivoting), integrated the unicycle kinematic equations over 1 second at 0.1 second timesteps to produce a curved arc, and checked every intermediate point for obstacle collision. Then, the backtracked path's action sequence was converted from RPMs to wheel velocities, then to linear and angular velocities, and fed into a ROS2 timer-based RobotControl node that published each command at fixed intervals.</p><p>The coordinate system was the biggest source of bugs. The algorithm works in a standard math frame (y-up), but OpenCV and Gazebo use different conventions. Getting obstacle equations, map rasterization, and the motion integration to all agree on the same frame took multiple iterations. An early bug caused the robot to plan paths through the clearance zone because the pixel color check in move_func was comparing against wrong color values. Also, during the ROS2 implementation, the velocity scaling factors (the 0.058 linear and 3.15 angular multipliers) were tuned empirically because the raw kinematic outputs did not translate directly to Gazebo's physics, leading to the robot overshooting or spinning in place. The timer interval of 1.75 seconds per command step was similarly determined through trial runs in simulation.</p><p>The planner successfully found collision-free, kinematically feasible paths from arbitrary start configurations to goal positions across a 6m x 2m map with two rectangular obstacles and one circular obstacle. The A* search explored the configuration space and produced curved, arc-based paths that respected the robot's turning radius. In Part 2, the TurtleBot3 in Gazebo executed the planned path by following the sequence of velocity commands, reaching the goal node. The planning animation was recorded as an MP4 showing the search tree expansion and final path.</p><p>This project covers the full stack of what a motion planning engineer actually does: writing a custom planner, modeling real actuator constraints, and closing the loop into a simulated execution environment. The differential-drive kinematic model and the (x, y, &theta;) state space with continuous action sets are exactly the approach used in Nav2's local planners and DWA-based controllers in production AMR systems. Bridging A* to ROS2 execution via /cmd_vel demonstrated the kind of algorithm-to-deployment workflow that is central to AMR software development.</p><div class="pb-media-row"><div class="pb-media-item"><div class="pb-media-label">Video Link 1</div><iframe src="https://drive.google.com/file/d/14HxtT1DbY8zS777Tv_Qrf_5FtBZ3wkad/preview" class="pb-video" allow="autoplay" allowfullscreen></iframe></div><div class="pb-media-item"><div class="pb-media-label">Video Link 2</div><iframe src="https://drive.google.com/file/d/1IWEEaPTUh4zzWwEZcqSbLXrzmgNFMoEE/preview" class="pb-video" allow="autoplay" allowfullscreen></iframe></div></div><a href="https://github.com/akin2662/A-star-algorithm-for-path-planning-for-TurtleBot.git" target="_blank" class="pb-link">Github &rarr;</a>`, tags:[], color:0x5a70c8},
+
+  {label:'6-DOF ARM', title:'Custom 6-DOF Industrial Arm with Forward/Inverse Kinematics and Gazebo Simulation', body:`<p>The goal was to design a 6-DOF robotic arm from scratch, starting from CAD geometry, and build the complete software stack around it: URDF/Xacro robot description, Denavit-Hartenberg based forward kinematics, Jacobian-based inverse kinematics, a custom Gazebo odometry plugin, conveyor belt integration, and a ROS2 control pipeline with both keyboard teleoperation and autonomous waypoint execution. Nothing was borrowed from an existing robot package. The arm geometry, DH parameters, and all kinematics were defined from the physical design upward.</p><p>This project was about understanding what sits underneath frameworks like MoveIt2 by building the equivalent from first principles. The aim was to go from SolidWorks CAD parts to a fully simulated robot in Gazebo that could be controlled at the joint level, execute IK-solved trajectories, report its end-effector pose through a custom Gazebo plugin, and interact with a moving conveyor belt in the environment.</p><p>The robot was designed as a 6-link arm in SolidWorks, exported as STL meshes, and described in a URDF Xacro with six continuous revolute joints controlled via ros2_control's JointGroupPositionController. The DH parameter table was derived from the physical link geometry, with each frame-to-frame transformation implemented symbolically using SymPy's matrix operations in forward_kinematics.py. This produced the full 4x4 homogeneous transformation from base to end-effector for any joint configuration.</p><p>The inverse kinematics in inverse_kinematics.py used a Jacobian-based iterative numerical approach rather than closed-form analytical IK. The 6x6 Jacobian was built from the cross products of each joint's z-axis with the vector from that joint's origin to the end-effector (the standard geometric Jacobian formulation). At each iteration, the desired end-effector velocity was mapped to joint angle velocities via the Jacobian inverse, and the joint angles were integrated forward with a small timestep. This was used to trace two circular arc waypoints in 3D space, with the resulting end-effector trajectory plotted in matplotlib.</p><p>The waypoint joint angles computed by the IK solver were then fed into test.py, a ROS2 node that replayed those joint angle sequences by streaming Float64MultiArray position commands at small increments to the /position_controller/commands topic, driving the arm smoothly through each waypoint. A separate keyboard teleoperation node (teleop.py) allowed real-time per-joint control for manual testing. The gripper was controlled as a separate service call via ROS2's SetBool service interface, connected to the conveyor belt's /switch service. A custom Gazebo plugin (odometry_plugin.cpp) was written in C++ to read the base link's world pose directly from the Gazebo physics engine at each simulation step and publish it as a PoseStamped on /odom, along with a TF broadcast between the world and robot frames. A second ROS2 node (odom_sub.py) subscribed to this topic and plotted the end-effector trajectory live in 3D as the arm moved.</p><p>The DH parameter derivation was the most failure-prone step. A sign error in the frame_2_3 theta offset (it differs between forward_kinematics.py and inverse_kinematics.py) caused the FK and IK solvers to operate on slightly different robot models, which meant the IK-solved joint angles did not perfectly reproduce the intended trajectory when re-run through FK. This was caught by comparing the plotted IK trajectory against the expected arc and noticing the end-effector deviated at larger joint angles. Getting the odometry plugin to compile and load in Gazebo required resolving include path mismatches between gazebo_ros and ignition::math headers, which differed between ROS2 Humble's Gazebo Classic and Ignition dependencies. The joint angle streaming in test.py drives each joint sequentially rather than simultaneously, meaning the arm moves one joint at a time rather than in coordinated motion, which was a deliberate simplification but caused the arm to follow a non-smooth path through intermediate configurations.</p><p>The arm was successfully simulated in Gazebo with full joint-level position control via ros2_control. Forward kinematics correctly computed the end-effector transformation matrix for arbitrary joint inputs using the full DH chain. The IK solver traced two circular arc waypoints in Cartesian space, computed the required joint angle sequences, and those sequences were executed in simulation with the arm reaching the target configurations. The odometry plugin published real-time pose data from Gazebo's physics engine, and the live 3D trajectory plot confirmed the end-effector path. The conveyor belt environment was integrated and the gripper service interface was functional.</p><a href="https://github.com/akin2662/FMS-Robotics-Manipulator-Simulations-for-pick-and-place-operations.git" target="_blank" class="pb-link">Github &rarr;</a>`, tags:[], color:0x30a0c0},
+
+  {label:'KICK ROBOTICS', title:'Experience at Kick Robotics LLC', body:`<p>Kick Robotics is an early-stage startup building indoor Autonomous Mobile Robots for industrial and commercial environments. The flagship product, the AirQ Bot, autonomously navigates warehouse spaces while continuously monitoring and generating real-time environmental heatmaps overlaid on a LIDAR-built map of the facility. The platform is fully custom.</p><p>The current cycle is AirQ Bot v2.0, a major redesign from v1.0. It moves to an aluminum chassis, upgrades compute to an NVIDIA Jetson Orin Nano running ROS2 with Nav2, integrates a depth camera and a IMU. The software stack uses Nav2 for autonomous navigation, AMCL for localization, EKF-based sensor fusion combining LIDAR and IMU, and SLAM for map generation. A custom React GUI called KickAirQ gives operators three operational modes: remote teleoperation, mapping, and autonomous waypoint navigation.</p><p>I built and maintained the RC teleoperation node, handling communication between the transmitter/receiver and the motor controllers over ROS2. I wrote the waypoint navigation scripts that drive the autonomous run, collecting environmental data at each pose and triggering the output pipeline to generate heatmaps and aggregated CSVs.</p><p>A significant portion of my work was hardware bring-up and debugging: setting up udev rules for stable device paths across reboots, debugging power sequencing between the always-on 8V rail and the main 24V drive pack, verifying DC-DC converter stability under load. I also contributed to v2.0 component selection and BOM development, evaluating tradeoffs across compute, motor controllers, and chassis options.</p><p>I also assisted in Field Deployment and Testing, which involved giving customer demos, running different tests in field and doing SATs.</p><div class="pb-media-row"><div class="pb-media-item"><div class="pb-media-label">Bot Image in warehouse 1</div><img src="https://drive.google.com/thumbnail?id=1lRgNwdoCQBtGdqEFVFJ0IJMIfEPyrmWU&sz=w800" alt="AirQ Bot in Warehouse 1" class="pb-img"></div><div class="pb-media-item"><div class="pb-media-label">Bot image in warehouse 2</div><img src="https://drive.google.com/thumbnail?id=1o8O9os58VDzT9qhyy3ZkfVbofHrp5i4t&sz=w800" alt="AirQ Bot in Warehouse 2" class="pb-img"></div></div>`, tags:[], color:0xc05030},
+
+  {label:'OTHER PROJECTS', title:'Other Projects', body:`<div class="pb-section"><span class="pb-label">Autonomous Navigation System:</span><p>A ROS2 autonomous navigation pipeline for TurtleBot3 where ArUco marker detection cross-references a YAML config to identify five target objects, logical camera poses are broadcast as TF frames, resolved into map coordinates, and dispatched as a single NavigateThroughPoses goal to Nav2. Debugged several critical issues including wrong array indices in camera TF broadcasts, a missing timer for one camera, the Nav2 goal firing before poses were collected, a deprecated action callback signature breaking compilation on Humble, two disconnected TF subtrees between the world and map frames, and missing AMCL bringup causing the map frame to never appear.</p></div><div class="pb-section"><span class="pb-label">Object Tracking and Parabolic Motion Analysis</span><p>A computer vision project in Python using OpenCV and NumPy to track a moving object across video frames and predict its trajectory. Each frame is converted to grayscale and thresholded to isolate the object from the background, then the centroid of the dark object region is computed by averaging the pixel indices. Centroid coordinates are collected across all frames and passed through a from-scratch least squares fitting implementation, manually constructing the A matrix, computing the Moore-Penrose pseudoinverse via normal equations, and solving for the coefficients of a quadratic fit without using any curve fitting library. The fitted parabola is then used to predict the object's position at an arbitrary x value, and the trajectory is plotted alongside a single frame with its detected centroid, with the y-axis inverted to account for OpenCV's top-left origin convention versus matplotlib's bottom-left.</p></div><div class="pb-section"><span class="pb-label">Assessing the health of a shaft</span><p>A machine health monitoring system in MATLAB that uses FFT-based feature extraction and logistic regression to classify vibration signals as healthy or faulty. Raw vibration signals sampled at 2560 Hz are processed through a custom FFT function that isolates the dominant frequency and its amplitude within a 10-60 Hz band as the two diagnostic features. These features are extracted from labeled healthy and faulty training datasets, visualized in the time and frequency domains, and used to train a binomial logistic regression model using MATLAB's glmfit. The trained model is then evaluated on unseen test signals using glmval, outputting a continuous condition value (CV) between 0 and 1 that tracks machine health degradation over the test samples. A multiclass Fisher discriminant score function is also implemented from scratch to rank feature separability between classes by computing the ratio of between-class to within-class variance, providing a quantitative way to evaluate which extracted features are most discriminative for fault detection.</p></div><div class="pb-section"><span class="pb-label">Path Planning for a point robot in 2D space using Dijkstra's algorithm</span><p>Dijkstra's algorithm implemented in Python for a point robot navigating a 1200x500 pixel 2D map with rectangle and hexagon obstacles, drawn using OpenCV. The map is generated programmatically by painting obstacle geometry directly onto a NumPy image array, with a 5-pixel clearance boundary drawn around each obstacle in white. The algorithm uses a min-heap priority queue via heapq to expand nodes in order of cumulative cost, supporting 8-directional movement where cardinal moves cost 1 and diagonal moves cost the square root of 2. Free space is checked by reading pixel color directly off the image array. Once the goal is reached, the shortest path is recovered via a parent dictionary backtrack. The exploration and final path are then rendered frame-by-frame into an output MP4 video using OpenCV's VideoWriter, with explored nodes colored green and the final path colored gray, skipping every 10 frames to keep the video concise.</p></div>`, tags:[], color:0x7a40b0},
+
+  {label:'RESUME', title:'Resume', body:`<a href="https://drive.google.com/drive/folders/1wEtj02946kdkq_rOxc6_EaKUrhYqK67G?usp=sharing" target="_blank" class="pb-link">Link to resume &rarr;</a>`, tags:[], color:0xb89020},
+];
+const N=STATIONS.length;
+
+// ══════════════════════════════════════════════════════
+// RENDERER
+// ══════════════════════════════════════════════════════
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+renderer.physicallyCorrectLights=true;
+document.getElementById('c').appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x18222e);
+scene.fog=new THREE.FogExp2(0x18222e,0.022);
+
+const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,0.1,120);
+camera.position.set(0,7,14);
+camera.lookAt(0,1.5,0);
+
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+const lerp=(a,b,t)=>a+(b-a)*t;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t<.5?2*t*t:-1+(4-2*t)*t;
+const easeOut=t=>1-(1-t)*(1-t);
+const easeIn=t=>t*t;
+
+function mkBox(w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.castShadow=o.receiveShadow=true;return o;}
+function mkCyl(rt,rb,h,s,m){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,s),m);o.castShadow=o.receiveShadow=true;return o;}
+
+// ══════════════════════════════════════════════════════
+// MATERIALS
+// ══════════════════════════════════════════════════════
+const mArm  =new THREE.MeshStandardMaterial({color:0xddd8d0,roughness:0.14,metalness:0.72});
+const mJoint=new THREE.MeshStandardMaterial({color:0x282830,roughness:0.16,metalness:0.90});
+const mDark =new THREE.MeshStandardMaterial({color:0x1c1e24,roughness:0.18,metalness:0.88});
+const mRub  =new THREE.MeshStandardMaterial({color:0x111214,roughness:0.96,metalness:0.00});
+const mFing =new THREE.MeshStandardMaterial({color:0xb0bcc4,roughness:0.16,metalness:0.84});
+const mLED  =new THREE.MeshStandardMaterial({color:0x4a90d0,emissive:0x1a5090,emissiveIntensity:0.45,roughness:0.2,metalness:0.8});
+const mFloor=new THREE.MeshStandardMaterial({color:0x28333e,roughness:0.85,metalness:0.05});
+const mConc =new THREE.MeshStandardMaterial({color:0x303c48,roughness:0.92,metalness:0.03});
+const mSteel=new THREE.MeshStandardMaterial({color:0x4a5868,roughness:0.38,metalness:0.72});
+const mBelt =new THREE.MeshStandardMaterial({color:0x181e24,roughness:0.88,metalness:0.05});
+const mBeltL=new THREE.MeshStandardMaterial({color:0x282e36,roughness:0.90,metalness:0.05});
+const mBeltF=new THREE.MeshStandardMaterial({color:0x38485a,roughness:0.40,metalness:0.78});
+function mkWood(c,r=0.84){return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:0.01});}
+const mWoods=[mkWood(0xc49050),mkWood(0xba8848),mkWood(0xcc9858),mkWood(0xb08040),mkWood(0xc89050)];
+const mEdge =mkWood(0x7a5228,0.92);
+const mMetal=new THREE.MeshStandardMaterial({color:0x8a9298,roughness:0.32,metalness:0.82});
+
+// ══════════════════════════════════════════════════════
+// LAYOUT CONSTANTS
+// ══════════════════════════════════════════════════════
+const ST_SPACE=5.5;          // spacing between stations along Z
+const N_ST=N;
+const BELT_H=0.22;           // belt surface Y
+const BELT_W=1.10;
+const ARM_X=2.0;             // arm base |X| from belt center
+const CRATE_X=3.80;          // crate center |X| from belt center
+const SH_Y=BELT_H+0.04+0.72;// shoulder world Y
+const L1=1.50,L2=1.20,W_TIP=0.40;
+
+const Z0=-(N-1)*ST_SPACE/2; // Z of first station
+const stZ=Array.from({length:N},(_,i)=>Z0+i*ST_SPACE);
+const stSide=Array.from({length:N},(_,i)=>i%2===0?1:-1); // +1=right, -1=left
+
+const CRATE_FLOOR_Y=0.07+0.055+0.07; // crate base + plank floor + half cube
+const BELT_OBJ_Y=BELT_H+0.08;        // object centre on belt
+
+// ══════════════════════════════════════════════════════
+// LIGHTING
+// ══════════════════════════════════════════════════════
+scene.add(new THREE.HemisphereLight(0x3a5060,0x14100a,1.0));
+
+const fill=new THREE.DirectionalLight(0x6080a0,0.65);
+fill.position.set(-8,10,4); scene.add(fill);
+
+const sun=new THREE.DirectionalLight(0xfff4e0,1.05);
+sun.position.set(6,14,6);
+sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.near=0.5;sun.shadow.camera.far=80;
+sun.shadow.camera.left=-20;sun.shadow.camera.right=20;
+sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;
+sun.shadow.bias=-0.0005;
+scene.add(sun);
+
+// Overhead strip lights per station
+stZ.forEach(z=>{
+  const pl=new THREE.PointLight(0xffe8b0,2.4,11);
+  pl.position.set(0,6.5,z); scene.add(pl);
+  const fix=mkBox(0.45,0.055,1.3,new THREE.MeshStandardMaterial({color:0xfff0c0,emissive:0xffe090,emissiveIntensity:1.1,roughness:0.6}));
+  fix.position.set(0,6.6,z); scene.add(fix);
+});
+
+// Per-station crate spotlights
+const stSpots=stZ.map((z,i)=>{
+  const s=stSide[i];
+  const sp=new THREE.SpotLight(0xfff5e8,0,14,Math.PI/6.5,0.28,1.3);
+  sp.castShadow=false;
+  sp.position.set(s*CRATE_X,9.5,z);
+  sp.target.position.set(s*CRATE_X,0,z);
+  sp.target.updateMatrixWorld();
+  scene.add(sp);scene.add(sp.target);
+  return sp;
+});
+
+// Arm follow-spot
+const armSpot=new THREE.SpotLight(0xffffff,0,16,Math.PI/8,0.20,1.2);
+armSpot.castShadow=true;
+armSpot.shadow.mapSize.set(512,512);
+armSpot.shadow.bias=-0.001;
+armSpot.position.set(0,12,0);
+armSpot.target.position.set(0,0,0);
+scene.add(armSpot);scene.add(armSpot.target);
+
+// ══════════════════════════════════════════════════════
+// FLOOR  (sized dynamically to fit all stations)
+// ══════════════════════════════════════════════════════
+const SCENE_Z0=Z0-4, SCENE_Z1=stZ[N-1]+4, SCENE_LEN=SCENE_Z1-SCENE_Z0, SCENE_MZ=(SCENE_Z0+SCENE_Z1)/2;
+const fl=new THREE.Mesh(new THREE.PlaneGeometry(36,SCENE_LEN+20),mFloor);
+fl.rotation.x=-Math.PI/2;fl.position.set(0,0,SCENE_MZ);fl.receiveShadow=true;scene.add(fl);
+for(let x=-9;x<=9;x+=3){const b=mkBox(0.04,0.013,SCENE_LEN+20,mConc);b.position.set(x,0.007,SCENE_MZ);scene.add(b);}
+for(let z=SCENE_Z0-10;z<=SCENE_Z1+10;z+=3){const b=mkBox(36,0.013,0.04,mConc);b.position.set(0,0.007,z);scene.add(b);}
+
+// ══════════════════════════════════════════════════════
+// WAREHOUSE BACKGROUND  (walls follow scene extent)
+// ══════════════════════════════════════════════════════
+const wallM=new THREE.MeshStandardMaterial({color:0x1e2a36,roughness:0.92,metalness:0.04});
+// Back wall (negative Z end)
+const backW=new THREE.Mesh(new THREE.PlaneGeometry(36,14),wallM);
+backW.position.set(0,7,SCENE_Z0-0.5);backW.receiveShadow=true;scene.add(backW);
+// Front wall (positive Z end)
+const frontW=new THREE.Mesh(new THREE.PlaneGeometry(36,14),wallM);
+frontW.rotation.y=Math.PI;frontW.position.set(0,7,SCENE_Z1+0.5);scene.add(frontW);
+// Side walls
+const sideWL=new THREE.Mesh(new THREE.PlaneGeometry(SCENE_LEN+10,14),wallM);
+sideWL.rotation.y=Math.PI/2;sideWL.position.set(-18,7,SCENE_MZ);scene.add(sideWL);
+const sideWR=new THREE.Mesh(new THREE.PlaneGeometry(SCENE_LEN+10,14),wallM);
+sideWR.rotation.y=-Math.PI/2;sideWR.position.set(18,7,SCENE_MZ);scene.add(sideWR);
+// Wall ribs — horizontal
+for(let y=1;y<=12;y+=2.5){
+  const r=mkBox(36,0.07,0.05,mSteel);r.position.set(0,y,SCENE_Z0-0.46);scene.add(r);
+  const rl=mkBox(0.07,0.07,SCENE_LEN+10,mSteel);rl.position.set(-17.96,y,SCENE_MZ);scene.add(rl);
+  const rr=mkBox(0.07,0.07,SCENE_LEN+10,mSteel);rr.position.set(17.96,y,SCENE_MZ);scene.add(rr);
+}
+// Wall columns on back wall
+for(let x=-15;x<=15;x+=7.5){const c=mkBox(0.16,14,0.10,mSteel);c.position.set(x,7,SCENE_Z0-0.46);scene.add(c);}
+// Ceiling joists spanning full length
+[-10,-4,0,4,10].forEach(x=>{
+  const bj=mkBox(0.28,0.28,SCENE_LEN+10,mSteel);bj.position.set(x,7.2,SCENE_MZ);scene.add(bj);
+});
+// Cross beams every 6 units
+for(let z=SCENE_Z0;z<=SCENE_Z1;z+=6){
+  const bm=mkBox(36,0.28,0.28,mSteel);bm.position.set(0,7.2,z);scene.add(bm);
+}
+
+// Storage racks — placed at back of scene, spanning the full length
+const rackM=new THREE.MeshStandardMaterial({color:0x3a4858,roughness:0.42,metalness:0.78});
+[-13,13].forEach(rx=>{
+  for(let ry=0.8;ry<=4.5;ry+=1.35){
+    const sh=mkBox(5.5,0.06,0.85,rackM);sh.position.set(rx,ry,SCENE_Z0+2);scene.add(sh);
+    for(let bx=-2.0;bx<=2.0;bx+=1.0){
+      const bh=0.4+Math.sin(rx*bx*ry)*0.2+0.2;
+      const bo=mkBox(0.85,bh,0.72,mWoods[Math.abs(Math.round(rx+bx+ry))%mWoods.length]);
+      bo.position.set(rx+bx,ry+0.03+bh/2,SCENE_Z0+2);scene.add(bo);
+    }
+  }
+  for(const rz of [SCENE_Z0+1.55,SCENE_Z0+2.45]){
+    const up=mkCyl(0.04,0.04,5.5,6,rackM);up.position.set(rx-2.75,2.75,rz);scene.add(up);
+    const up2=mkCyl(0.04,0.04,5.5,6,rackM);up2.position.set(rx+2.75,2.75,rz);scene.add(up2);
+  }
+});
+
+// Safety floor stripes beside belt
+const yM=new THREE.MeshStandardMaterial({color:0xe0b820,roughness:0.7});
+for(let z=Z0-1;z<=stZ[N-1]+1;z+=1.1){
+  [1.4,-1.4].forEach(sx=>{
+    const s=mkBox(0.14,0.011,0.55,yM);s.position.set(sx,0.007,z);scene.add(s);
+  });
+}
+
+// Electrical conduit — span full scene length
+for(let x=-12;x<=12;x+=6){
+  const p=mkCyl(0.045,0.045,SCENE_LEN+10,8,mSteel);p.rotation.z=Math.PI/2;p.position.set(x,5.5,SCENE_MZ);scene.add(p);
+}
+
+// ══════════════════════════════════════════════════════
+// CONVEYOR BELT
+// ══════════════════════════════════════════════════════
+const BELT_Z0=Z0-1.2, BELT_Z1=stZ[N-1]+1.2, BELT_LEN=BELT_Z1-BELT_Z0;
+
+// Belt surface
+const bsurf=mkBox(BELT_W,0.07,BELT_LEN,mBelt);
+bsurf.position.set(0,BELT_H,(BELT_Z0+BELT_Z1)/2);scene.add(bsurf);
+
+// Side rails
+[-1,1].forEach(s=>{
+  const r=mkBox(0.055,0.26,BELT_LEN,mBeltF);
+  r.position.set(s*(BELT_W/2+0.028),BELT_H,(BELT_Z0+BELT_Z1)/2);scene.add(r);
+});
+
+// Legs + cross braces
+for(let z=BELT_Z0+1.0;z<BELT_Z1;z+=1.9){
+  [-0.38,0.38].forEach(sx=>{
+    const leg=mkCyl(0.036,0.036,BELT_H-0.04,6,mBeltF);
+    leg.position.set(sx,(BELT_H-0.04)/2,z);scene.add(leg);
+  });
+  const br=mkBox(0.80,0.035,0.035,mBeltF);br.position.set(0,(BELT_H-0.04)/2,z);scene.add(br);
+}
+
+// End rollers
+[BELT_Z0,BELT_Z1].forEach(z=>{
+  const r=mkCyl(BELT_H,BELT_H,BELT_W+0.05,14,mBeltF);
+  r.rotation.z=Math.PI/2;r.position.set(0,BELT_H,z);scene.add(r);
+});
+
+// Animated stripes
+const NUM_STRIPES=30;
+const beltStripes=[];
+for(let i=0;i<NUM_STRIPES;i++){
+  const s=mkBox(BELT_W-0.04,0.075,0.055,mBeltL);
+  s.position.set(0,BELT_H+0.005,BELT_Z0+(i/NUM_STRIPES)*BELT_LEN);
+  scene.add(s);beltStripes.push(s);
+}
+let beltOffset=0,beltMoving=false,beltDir=1;
+
+// ══════════════════════════════════════════════════════
+// CRATE BUILDER
+// ══════════════════════════════════════════════════════
+const CW=1.42,CH=0.80,CD=1.42,PT=0.055;
+function buildCrate(){
+  const g=new THREE.Group();
+  const T=PT;
+  const pw=(CW-2*T)/4-0.010, stride=(CW-2*T)/4;
+  for(let i=0;i<4;i++){
+    const p=mkBox(pw,T,CD-2*T,mWoods[i%mWoods.length]);
+    p.position.set(-CW/2+T+stride*(i+0.5),T/2,0);g.add(p);
+  }
+  const wph=(CH-T)/4;
+  [-1,1].forEach(side=>{
+    for(let r=0;r<4;r++){
+      const p=mkBox(CW-2*T-0.007,wph-0.010,T,mWoods[(r*2)%mWoods.length]);
+      p.position.set(0,T+wph*(r+0.5)-0.005,side*(CD/2-T/2));g.add(p);
+    }
+  });
+  [-1,1].forEach(side=>{
+    for(let r=0;r<4;r++){
+      const p=mkBox(T,wph-0.010,CD,mWoods[(r*2+1)%mWoods.length]);
+      p.position.set(side*(CW/2-T/2),T+wph*(r+0.5)-0.005,0);g.add(p);
+    }
+  });
+  [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sz])=>{
+    const post=mkBox(T+0.007,CH+0.010,T+0.007,mEdge);
+    post.position.set(sx*(CW/2-T/2),CH/2,sz*(CD/2-T/2));g.add(post);
+  });
+  [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sz])=>{
+    const b1=mkBox(T+0.048,0.034,0.148,mMetal);b1.position.set(sx*(CW/2-T/2),CH-0.017,sz*(CD/2-0.074));g.add(b1);
+    const b2=mkBox(0.148,0.034,T+0.048,mMetal);b2.position.set(sx*(CW/2-0.074),CH-0.017,sz*(CD/2-T/2));g.add(b2);
+    const bolt=mkCyl(0.012,0.012,0.018,6,mMetal);bolt.rotation.x=Math.PI/2;
+    bolt.position.set(sx*(CW/2-T/2-0.026),CH-0.017,sz*(CD/2-T/2-0.026));g.add(bolt);
+  });
+  [CH*0.26,CH*0.72].forEach(y=>{
+    [-1,1].forEach(side=>{
+      const b=mkBox(CW+0.004,0.031,0.019,mMetal);b.position.set(0,y,side*(CD/2-T/2));g.add(b);
+      [-0.48,-0.15,0.15,0.48].forEach(rx=>{
+        const rv=mkCyl(0.011,0.011,0.009,6,mMetal);rv.rotation.x=Math.PI/2;
+        rv.position.set(rx,y+0.003,side*(CD/2-T/2+0.010));g.add(rv);
+      });
+    });
+    [-1,1].forEach(side=>{
+      const b=mkBox(0.019,0.031,CD+0.004,mMetal);b.position.set(side*(CW/2-T/2),y,0);g.add(b);
+    });
+  });
+  return g;
+}
+
+// ══════════════════════════════════════════════════════
+// STATIONS — build crates, arms, payload meshes
+// ══════════════════════════════════════════════════════
+const stCrateGroups=[];  // hit-test meshes per station
+const placedCubes=[];
+
+stZ.forEach((z,i)=>{
+  const s=stSide[i];
+  const cx=s*CRATE_X, ax=s*ARM_X;
+
+  // Arm platform
+  const ap=mkCyl(0.54,0.57,0.055,18,mSteel);ap.position.set(ax,0.028,z);scene.add(ap);
+  // Crate platform
+  const cpM=new THREE.MeshStandardMaterial({color:0x3a4858,roughness:0.42,metalness:0.72});
+  const cp=mkBox(CW+0.10,0.065,CD+0.10,cpM);cp.position.set(cx,0.033,z);scene.add(cp);
+
+  // Crate
+  const cr=buildCrate();
+  cr.position.set(cx,0.065,z);
+  cr.rotation.y=s>0?-Math.PI/2:Math.PI/2;
+  scene.add(cr);
+  const hm=[];cr.traverse(c=>{if(c.isMesh)hm.push(c);});
+  stCrateGroups.push(hm);
+
+  // Placed cube
+  const col=new THREE.Color(STATIONS[i].color);
+  const pm=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.14,0.32),
+    new THREE.MeshStandardMaterial({
+      color:col.clone().lerp(new THREE.Color(0xffffff),0.30),
+      emissive:col.clone().multiplyScalar(0.38),
+      emissiveIntensity:0.50,roughness:0.50,metalness:0.10
+    }));
+  pm.position.set(cx,CRATE_FLOOR_Y,z);
+  pm.visible=false;pm.castShadow=true;scene.add(pm);
+  placedCubes.push(pm);
+});
+
+// Active traveling object
+const objMat=new THREE.MeshStandardMaterial({color:0xe8c870,emissive:0xa07820,emissiveIntensity:0.62,roughness:0.50,metalness:0.08});
+const activeObj=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.14,0.32),objMat);
+activeObj.castShadow=true;scene.add(activeObj);
+activeObj.position.set(stSide[0]*CRATE_X,CRATE_FLOOR_Y,stZ[0]);
+
+// ══════════════════════════════════════════════════════
+// ROBOT ARM BUILDER
+// ══════════════════════════════════════════════════════
+function buildArm(side){
+  // side: +1=right side of belt (arm faces -X toward belt)
+  //       -1=left side of belt (arm faces +X toward belt)
+  // We build arm always facing +X, then mirror left arms with scale.x=-1
+  const root=new THREE.Group();
+  if(side<0)root.scale.x=-1;
+
+  // Base column
+  const bBase=mkCyl(0.37,0.43,0.17,22,mDark);bBase.position.y=0.085;root.add(bBase);
+  const bMid =mkCyl(0.33,0.37,0.48,22,mArm); bMid.position.y=0.415;root.add(bMid);
+  const bTop =mkCyl(0.35,0.35,0.075,22,mDark);bTop.position.y=0.695;root.add(bTop);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.31,0.011,8,28),mLED);
+  ring.rotation.x=Math.PI/2;ring.position.y=0.56;root.add(ring);
+
+  // J1 yaw
+  const j1=new THREE.Group();j1.position.y=0.73;root.add(j1);
+  const sh=mkCyl(0.25,0.27,0.36,18,mArm);sh.rotation.z=Math.PI/2;j1.add(sh);
+  const shL=mkCyl(0.18,0.18,0.09,13,mJoint);shL.rotation.z=Math.PI/2;shL.position.x=-0.23;j1.add(shL);
+  const shR=shL.clone();shR.position.x=0.23;j1.add(shR);
+
+  // J2 shoulder
+  const j2=new THREE.Group();j2.position.x=0.25;j1.add(j2);
+  const ua=new THREE.Group();j2.add(ua);
+  const uaB=mkBox(0.155,L1,0.155,mArm);uaB.position.y=L1/2;ua.add(uaB);
+  [-1,1].forEach(s=>{const p=mkBox(0.019,L1*0.90,0.032,mDark);p.position.set(s*0.056,L1/2,0.072);ua.add(p);});
+  const elH=mkCyl(0.18,0.20,0.26,16,mArm);elH.rotation.z=Math.PI/2;elH.position.y=L1;ua.add(elH);
+  const elL=mkCyl(0.12,0.12,0.076,11,mJoint);elL.rotation.z=Math.PI/2;elL.position.set(-0.17,L1,0);ua.add(elL);
+  const elR=elL.clone();elR.position.set(0.17,L1,0);ua.add(elR);
+  const cPts=[new THREE.Vector3(0.078,0.05,0.078),new THREE.Vector3(0.088,0.44,0.086),new THREE.Vector3(0.078,0.92,0.086),new THREE.Vector3(0.068,L1,0.075)];
+  ua.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cPts),12,0.013,5),mRub));
+
+  // J3 elbow
+  const j3=new THREE.Group();j3.position.y=L1;ua.add(j3);
+  const fa=new THREE.Group();j3.add(fa);
+  const faB=mkCyl(0.088,0.115,L2,14,mArm);faB.position.y=L2/2;fa.add(faB);
+  const faS=mkBox(0.032,L2*0.85,0.019,mDark);faS.position.set(0.098,L2/2,0);fa.add(faS);
+  const wH=mkCyl(0.105,0.105,0.21,13,mArm);wH.rotation.z=Math.PI/2;wH.position.y=L2;fa.add(wH);
+  const wL=mkCyl(0.076,0.076,0.058,10,mJoint);wL.rotation.z=Math.PI/2;wL.position.set(-0.135,L2,0);fa.add(wL);
+  const wR=wL.clone();wR.position.set(0.135,L2,0);fa.add(wR);
+
+  // J4 wrist
+  const j4=new THREE.Group();j4.position.y=L2;fa.add(j4);
+  const wT=mkCyl(0.074,0.074,0.23,12,mArm);wT.position.y=0.115;j4.add(wT);
+  const fl=mkCyl(0.082,0.082,0.048,12,mDark);fl.position.y=0.256;j4.add(fl);
+  for(let fi=0;fi<6;fi++){const ba=fi/6*Math.PI*2;const b=mkCyl(0.010,0.010,0.024,5,mRub);b.position.set(Math.cos(ba)*0.060,0.290,Math.sin(ba)*0.060);j4.add(b);}
+
+  // Gripper palm
+  const gG=new THREE.Group();gG.position.y=0.308;j4.add(gG);
+  const palm=mkCyl(0.074,0.074,0.105,12,mDark);palm.position.y=-0.053;gG.add(palm);
+  const palmF=mkBox(0.148,0.105,0.038,mJoint);palmF.position.set(0,-0.053,0.074);gG.add(palmF);
+  [-1,1].forEach(s=>{const r=mkBox(0.026,0.105,0.168,mDark);r.position.set(s*0.088,-0.053,0.015);gG.add(r);});
+  const gLED=new THREE.Mesh(new THREE.BoxGeometry(0.065,0.013,0.008),mLED);
+  gLED.position.set(0,-0.003,0.093);gG.add(gLED);
+
+  // Fingers
+  function mkFing(s){
+    const fg=new THREE.Group();
+    const sb=mkBox(0.048,0.058,0.124,mDark);sb.position.set(0,-0.084,0.019);fg.add(sb);
+    const pr=mkBox(0.042,0.200,0.042,mFing);pr.position.set(0,-0.218,0.019);pr.rotation.z=s*0.07;fg.add(pr);
+    const kn=mkCyl(0.021,0.021,0.053,7,mJoint);kn.rotation.z=Math.PI/2;kn.position.set(0,-0.322,0.019);fg.add(kn);
+    const dl=mkBox(0.038,0.158,0.038,mFing);dl.position.set(s*0.009,-0.414,0.019);dl.rotation.z=-s*0.13;fg.add(dl);
+    const pad=mkBox(0.038,0.075,0.048,mRub);pad.position.set(s*0.015,-0.502,0.021);fg.add(pad);
+    return fg;
+  }
+  const GOPEN=0.095,GCLOSED=0.028;
+  const fL=mkFing(-1);fL.position.x=-GOPEN;gG.add(fL);
+  const fR=mkFing( 1);fR.position.x= GOPEN;gG.add(fR);
+  const gglow=new THREE.PointLight(0x80b0d0,0,0.8);gglow.position.set(0,-0.50,0.03);gG.add(gglow);
+
+  // Gripped cube child
+  const gcMat=new THREE.MeshStandardMaterial({color:0xe8c870,emissive:0xa07820,emissiveIntensity:0.55,roughness:0.50,metalness:0.08});
+  const gc=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.14,0.32),gcMat);
+  gc.position.set(0,-0.498,0.021);gc.visible=false;gc.castShadow=true;
+  gG.add(gc);
+
+  const ARM={j1y:0,j2z:-1.05,j3z:1.20,j4z:0.15,grip:GOPEN};
+  const IDLE_S={j1y:0,j2z:-1.05,j3z:1.20,j4z:0.15,grip:GOPEN};
+
+  function applyA(){
+    j1.rotation.y=ARM.j1y;
+    j2.rotation.z=ARM.j2z;
+    j3.rotation.z=ARM.j3z;
+    j4.rotation.z=ARM.j4z;
+    fL.position.x=-ARM.grip;
+    fR.position.x= ARM.grip;
+  }
+
+  // IK: world target -> joint angles
+  // arm base is at (armX, BELT_H+0.04, stationZ) in world
+  // arm's local +X direction points toward belt center (i.e. -side direction in world X)
+  function solveIK(worldTarget,armWX,armWZ){
+    // Convert world target to arm-root local space (handles scale.x=-1 automatically)
+    root.updateWorldMatrix(true,false);
+    const localTarget=root.worldToLocal(worldTarget.clone());
+
+    // In arm-local space: +X = arm's "forward" (away from belt for right arm, toward belt for left)
+    // J1 yaws around local Y to point arm toward target in XZ plane
+    const lx=localTarget.x;
+    const lz=localTarget.z;
+    const ly=worldTarget.y; // Y is same in both (no Y scale/rotation)
+
+    const j1y=Math.atan2(lz,lx); // yaw so local +X faces target
+
+    // Horizontal distance in arm plane
+    const hd=Math.sqrt(lx*lx+lz*lz);
+
+    // Wrist is W_TIP above the gripper tip (gripper points down, wrist is above)
+    const wy=ly+W_TIP;
+    // Shoulder pivot height in world = root.position.y + 0.73 (j1 offset) ~= SH_Y
+    const shWorldY=BELT_H+0.04+0.73;
+    const dx=hd;
+    const dy=wy-shWorldY;
+
+    const D=Math.sqrt(dx*dx+dy*dy);
+    const Dc=clamp(D,Math.abs(L1-L2)+0.02,L1+L2-0.04);
+
+    // Law of cosines for elbow (j3z) and shoulder (j2z)
+    const cosE=(L1*L1+L2*L2-Dc*Dc)/(2*L1*L2);
+    const elbowAngle=Math.acos(clamp(cosE,-1,1));
+    // j3z negative = elbow bends back (standard UR convention)
+    const j3z=-(Math.PI-elbowAngle);
+
+    const gamma=Math.atan2(dy,dx);
+    const cosS=(L1*L1+Dc*Dc-L2*L2)/(2*L1*Dc);
+    const betaAngle=Math.acos(clamp(cosS,-1,1));
+    const j2z=-(gamma+betaAngle);
+
+    // Wrist keeps gripper pointing straight down in the arm plane
+    const j4z=-Math.PI/2-j2z-j3z;
+
+    return{j1y,j2z,j3z,j4z};
+  }
+
+  function tipWorld(){
+    gG.updateWorldMatrix(true,false);
+    const v=new THREE.Vector3(0,-0.498,0.021);
+    gG.localToWorld(v);return v;
+  }
+
+  return{root,gG,fL,fR,gglow,gc,gcMat,ARM,IDLE_S,GOPEN,GCLOSED,applyA,solveIK,tipWorld};
+}
+
+// Instantiate arms
+const arms=stZ.map((z,i)=>{
+  const arm=buildArm(stSide[i]);
+  arm.root.position.set(stSide[i]*ARM_X,BELT_H+0.04,z);
+  scene.add(arm.root);
+  return arm;
+});
+
+// ══════════════════════════════════════════════════════
+// ANIMATION ENGINE
+// ══════════════════════════════════════════════════════
+let curSt=0,animating=false,started=false;
+
+function runPhases(phases,done){
+  let pi=0,pt=0,last=null,snapFrom=null;
+  (function tick(ts){
+    if(!last)last=ts;
+    const dt=clamp((ts-last)/1000,0,0.05);last=ts;
+    const ph=phases[pi];
+    if(snapFrom===null)snapFrom=ph.getFrom?ph.getFrom():{};
+    pt=Math.min(pt+dt/ph.dur,1);
+    ph.fn((ph.ease||ease)(pt),snapFrom);
+    if(pt>=1){
+      if(ph.onEnd)ph.onEnd();
+      snapFrom=null;pt=0;pi++;
+      if(pi>=phases.length){done();return;}
+    }
+    requestAnimationFrame(tick);
+  })(0);
+}
+
+function lerpArm(arm,from,to,t){
+  for(const k in to)arm.ARM[k]=lerp(from[k]??arm.IDLE_S[k],to[k],t);
+  arm.applyA();
+}
+
+function trackSpot(arm){
+  const tw=arm.tipWorld();
+  armSpot.position.set(tw.x,12,tw.z);
+  armSpot.target.position.copy(tw);
+  armSpot.target.updateMatrixWorld();
+}
+
+function animateTransfer(from,to,cb){
+  animating=true;
+  beltMoving=false;
+  document.getElementById('info-panel').classList.add('hidden');
+
+  const sA=arms[from], dA=arms[to];
+  const sZ=stZ[from],  dZ=stZ[to];
+  const sS=stSide[from],dS=stSide[to];
+  const sCX=sS*CRATE_X, dCX=dS*CRATE_X;
+  const sAX=sS*ARM_X,   dAX=dS*ARM_X;
+  const CY=CRATE_FLOOR_Y, BY=BELT_OBJ_Y, CARRY=2.05;
+  const GO=sA.GOPEN,GC=sA.GCLOSED;
+  const DGO=dA.GOPEN,DGC=dA.GCLOSED;
+
+  // Show active object in src crate
+  placedCubes[from].visible=false;
+  activeObj.position.set(sCX,CY,sZ);activeObj.visible=true;
+  const sc=new THREE.Color(STATIONS[from].color);
+  objMat.color.copy(sc.clone().lerp(new THREE.Color(0xffffff),0.3));
+  objMat.emissive.copy(sc.clone().multiplyScalar(0.4));
+
+  function ikS(wx,wy,wz){return sA.solveIK(new THREE.Vector3(wx,wy,wz),sAX,sZ);}
+  function ikD(wx,wy,wz){return dA.solveIK(new THREE.Vector3(wx,wy,wz),dAX,dZ);}
+
+  const ikSAbvCrate=ikS(sCX,CY+0.30,sZ);
+  const ikSAtCrate =ikS(sCX,CY,     sZ);
+  const ikSCarry   =ikS(sCX,CARRY,  sZ);
+  const ikSAbvBelt =ikS(0,  BY+0.28,sZ);
+  const ikSAtBelt  =ikS(0,  BY,     sZ);
+  const ikSLiftBelt=ikS(0,  CARRY,  sZ);
+
+  const ikDAbvBelt =ikD(0,  BY+0.28,dZ);
+  const ikDAtBelt  =ikD(0,  BY,     dZ);
+  const ikDCarry   =ikD(0,  CARRY,  dZ);
+  const ikDAbvCrate=ikD(dCX,CY+0.30,dZ);
+  const ikDAtCrate =ikD(dCX,CY,     dZ);
+
+  const setAS=v=>armSpot.intensity=v;
+  const setSrc=v=>stSpots[from].intensity=v;
+  const setDst=v=>stSpots[to].intensity=v;
+  stSpots.forEach((_,i)=>{if(i!==from&&i!==to)stSpots[i].intensity=0;});
+
+  const beltTravel=dZ-sZ;
+
+  const phases=[
+    // A0: src arm swings open to above crate
+    {dur:0.90,ease:easeOut,getFrom:()=>({...sA.ARM}),fn:(t,f)=>{
+      lerpArm(sA,f,{...ikSAbvCrate,grip:GO},t);sA.ARM.grip=GO;
+      setAS(lerp(0,260,t));setSrc(lerp(0,180,t));trackSpot(sA);setStatus('MOVING TO PICKUP');}},
+    // A1: slow deliberate descent onto object
+    {dur:0.70,ease:easeIn,getFrom:()=>({...sA.ARM}),fn:(t,f)=>{
+      lerpArm(sA,f,{...ikSAtCrate,grip:GO},t);sA.ARM.grip=GO;
+      setAS(290);setSrc(260);trackSpot(sA);setStatus('DESCENDING ONTO OBJECT');}},
+    // A2: grip closes
+    {dur:0.45,getFrom:()=>({}),fn:(t)=>{
+      sA.ARM.grip=lerp(GO,GC,t);sA.gglow.intensity=lerp(0,2.2,t);sA.applyA();setStatus('CLOSING GRIPPER');},
+      onEnd:()=>{activeObj.visible=false;sA.gc.visible=true;
+        const c=new THREE.Color(STATIONS[from].color);
+        sA.gcMat.color.copy(c.clone().lerp(new THREE.Color(0xffffff),0.3));
+        sA.gcMat.emissive.copy(c.clone().multiplyScalar(0.4));sA.gcMat.emissiveIntensity=0.55;}},
+    // A3: lift clear
+    {dur:0.55,ease:easeOut,getFrom:()=>({...sA.ARM}),fn:(t,f)=>{
+      lerpArm(sA,f,{...ikSCarry,grip:GC},t);sA.ARM.grip=GC;sA.gglow.intensity=1.8;
+      setAS(lerp(290,250,t));setSrc(lerp(260,140,t));trackSpot(sA);setStatus('LIFTING OBJECT');}},
+    // A4: swing arm to above belt (slow sweep)
+    {dur:0.70,ease:easeOut,getFrom:()=>({...sA.ARM}),fn:(t,f)=>{
+      lerpArm(sA,f,{...ikSAbvBelt,grip:GC},t);sA.ARM.grip=GC;
+      setAS(250);setSrc(lerp(140,60,t));trackSpot(sA);setStatus('MOVING TO CONVEYOR');}},
+    // A5: lower to belt surface
+    {dur:0.60,ease:easeIn,getFrom:()=>({...sA.ARM}),fn:(t,f)=>{
+      lerpArm(sA,f,{...ikSAtBelt,grip:GC},t);sA.ARM.grip=GC;
+      setAS(lerp(250,200,t));trackSpot(sA);setStatus('PLACING ON BELT');}},
+    // A6: release onto belt
+    {dur:0.42,getFrom:()=>({}),fn:(t)=>{
+      sA.ARM.grip=lerp(GC,GO,t);sA.gglow.intensity=lerp(2.2,0,t);sA.applyA();setStatus('RELEASING');},
+      onEnd:()=>{sA.gc.visible=false;activeObj.position.set(0,BY,sZ);activeObj.visible=true;
+        beltMoving=true;beltDir=Math.sign(beltTravel)||1;}},
+    // A7: src arm retracts to safe height
+    {dur:0.65,ease:easeOut,getFrom:()=>({...sA.ARM}),fn:(t,f)=>{
+      lerpArm(sA,f,{...ikSLiftBelt,grip:GO},t);sA.ARM.grip=GO;
+      setAS(lerp(200,0,t));setSrc(lerp(60,0,t));trackSpot(sA);setStatus('BELT TRANSPORTING...');}},
+    // B: belt carries object to destination
+    {dur:Math.max(0.8,Math.abs(beltTravel)/4.5),getFrom:()=>({oz:sZ}),fn:(t,f)=>{
+      // Use ease so object accelerates/decelerates
+      activeObj.position.z=lerp(f.oz,dZ,ease(t));
+      setStatus(`CONVEYOR BELT → STATION ${to+1}`);},
+      onEnd:()=>{beltMoving=false;activeObj.position.set(0,BY,dZ);}},
+    // C0: dst arm swings to above belt
+    {dur:0.90,ease:easeOut,getFrom:()=>({...dA.ARM}),fn:(t,f)=>{
+      lerpArm(dA,f,{...ikDAbvBelt,grip:DGO},t);dA.ARM.grip=DGO;
+      setAS(lerp(0,240,t));setDst(lerp(0,130,t));trackSpot(dA);setStatus('DESTINATION: MOVING TO BELT');}},
+    // C1: slow descent to object
+    {dur:0.70,ease:easeIn,getFrom:()=>({...dA.ARM}),fn:(t,f)=>{
+      lerpArm(dA,f,{...ikDAtBelt,grip:DGO},t);dA.ARM.grip=DGO;
+      setAS(270);setDst(190);trackSpot(dA);setStatus('DESTINATION: DESCENDING');}},
+    // C2: grip closes
+    {dur:0.45,getFrom:()=>({}),fn:(t)=>{
+      dA.ARM.grip=lerp(DGO,DGC,t);dA.gglow.intensity=lerp(0,2.2,t);dA.applyA();setStatus('DESTINATION: GRIPPING');},
+      onEnd:()=>{activeObj.visible=false;dA.gc.visible=true;
+        const c=new THREE.Color(STATIONS[to].color);
+        dA.gcMat.color.copy(c.clone().lerp(new THREE.Color(0xffffff),0.3));
+        dA.gcMat.emissive.copy(c.clone().multiplyScalar(0.4));dA.gcMat.emissiveIntensity=0.55;
+        objMat.color.copy(c.clone().lerp(new THREE.Color(0xffffff),0.3));
+        objMat.emissive.copy(c.clone().multiplyScalar(0.4));}},
+    // C3: lift clear of belt
+    {dur:0.55,ease:easeOut,getFrom:()=>({...dA.ARM}),fn:(t,f)=>{
+      lerpArm(dA,f,{...ikDCarry,grip:DGC},t);dA.ARM.grip=DGC;dA.gglow.intensity=1.8;
+      setAS(lerp(270,240,t));setDst(lerp(190,150,t));trackSpot(dA);setStatus('DESTINATION: LIFTING');}},
+    // C4: swing arm toward crate
+    {dur:0.70,ease:easeOut,getFrom:()=>({...dA.ARM}),fn:(t,f)=>{
+      lerpArm(dA,f,{...ikDAbvCrate,grip:DGC},t);dA.ARM.grip=DGC;
+      setAS(lerp(240,130,t));setDst(lerp(150,280,t));trackSpot(dA);setStatus('DESTINATION: MOVING TO CRATE');}},
+    // C5: lower into crate
+    {dur:0.65,ease:easeIn,getFrom:()=>({...dA.ARM}),fn:(t,f)=>{
+      lerpArm(dA,f,{...ikDAtCrate,grip:DGC},t);dA.ARM.grip=DGC;
+      setAS(lerp(130,30,t));setDst(lerp(280,370,t));trackSpot(dA);setStatus('DESTINATION: LOWERING INTO CRATE');}},
+    // C6: release into crate
+    {dur:0.42,getFrom:()=>({}),fn:(t)=>{
+      dA.ARM.grip=lerp(DGC,DGO,t);dA.gglow.intensity=lerp(2.2,0,t);
+      dA.applyA();setAS(lerp(30,0,t));setDst(lerp(370,260,t));setStatus('DESTINATION: RELEASING');},
+      onEnd:()=>{dA.gc.visible=false;
+        const c=new THREE.Color(STATIONS[to].color);
+        placedCubes[to].material.color.copy(c.clone().lerp(new THREE.Color(0xffffff),0.3));
+        placedCubes[to].material.emissive.copy(c.clone().multiplyScalar(0.4));
+        placedCubes[to].material.emissiveIntensity=0.55;
+        placedCubes[to].visible=true;}},
+    // C7: dst arm retracts to idle
+    {dur:0.70,ease:easeOut,getFrom:()=>({...dA.ARM}),fn:(t,f)=>{
+      lerpArm(dA,f,dA.IDLE_S,t);setDst(lerp(260,155,t));setStatus(`STATION ${to+1} COMPLETE`);},
+      onEnd:()=>{dA.ARM.grip=DGO;dA.applyA();}},
+  ];
+
+  runPhases(phases,()=>{
+    animating=false;renderer.domElement.style.cursor='default';
+    curSt=to;updateNav();showPanel(to);setStatus('CLICK A STATION TO CONTINUE');
+    if(cb)cb();
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// LABELS + RAYCASTER
+// ══════════════════════════════════════════════════════
+const labelEls=STATIONS.map((s,i)=>{
+  const el=document.createElement('div');
+  el.className='stlabel';
+  el.innerHTML=`<span class="sln">${s.label}</span><span class="slt">CLICK TO VISIT</span>`;
+  el.style.opacity='0';
+  el.addEventListener('click',()=>{if(!animating&&started&&i!==curSt)goTo(i);});
+  document.body.appendChild(el);
+  return el;
+});
+
+const ray=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
+let hoveredSt=-1;
+
+renderer.domElement.addEventListener('mousemove',e=>{
+  if(!started||animating||document.getElementById('instructions').classList.contains('show'))return;
+  mouse.set((e.clientX/innerWidth)*2-1,-(e.clientY/innerHeight)*2+1);
+  ray.setFromCamera(mouse,camera);
+  let hit=-1;
+  for(let i=0;i<N;i++){
+    if(i===curSt)continue;
+    if(ray.intersectObjects(stCrateGroups[i]).length>0){hit=i;break;}
+  }
+  if(hit!==hoveredSt){
+    if(hoveredSt>=0)labelEls[hoveredSt].classList.remove('hover');
+    hoveredSt=hit;
+    if(hit>=0)labelEls[hit].classList.add('hover');
+    renderer.domElement.style.cursor=hit>=0?'pointer':'default';
+  }
+});
+
+renderer.domElement.addEventListener('click',e=>{
+  if(!started||animating||document.getElementById('instructions').classList.contains('show'))return;
+  mouse.set((e.clientX/innerWidth)*2-1,-(e.clientY/innerHeight)*2+1);
+  ray.setFromCamera(mouse,camera);
+  for(let i=0;i<N;i++){
+    if(i===curSt)continue;
+    if(ray.intersectObjects(stCrateGroups[i]).length>0){goTo(i);return;}
+  }
+});
+
+function goTo(i){
+  if(animating||i===curSt)return;
+  document.getElementById('hint').classList.add('hide');
+  animateTransfer(curSt,i);
+}
+
+function updateNav(){
+  labelEls.forEach((el,j)=>{
+    el.classList.toggle('active',j===curSt);
+    if(placedCubes[j].visible)el.classList.add('visited');
+  });
+  document.getElementById('pbar').style.width=(curSt/(N-1)*100)+'%';
+}
+
+function showPanel(i){
+  const s=STATIONS[i];
+  document.getElementById('ipl').textContent=s.label;
+  document.getElementById('ipt').innerHTML=s.title;
+  document.getElementById('ipb').innerHTML=s.body;
+  document.getElementById('iptags').innerHTML=s.tags.map(t=>`<span class="tag">${t}</span>`).join('');
+  document.getElementById('info-panel').classList.remove('hidden');
+}
+
+function setStatus(t){document.getElementById('sbar').textContent=t;}
+
+function projectScreen(wp){
+  const v=wp.clone().project(camera);
+  return{x:(v.x*.5+.5)*innerWidth,y:(-v.y*.5+.5)*innerHeight,behind:v.z>1};
+}
+
+function updateLabels(){
+  stZ.forEach((z,i)=>{
+    const s=stSide[i];
+    const wp=new THREE.Vector3(s*CRATE_X,CH+0.38,z);
+    const sc=projectScreen(wp);
+    const el=labelEls[i];
+    if(sc.behind||!started){el.style.opacity='0';return;}
+    el.style.left=sc.x+'px';
+    el.style.top=sc.y+'px';
+    el.style.opacity='1';
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════
+function handlePanelBackdrop(e){
+  if(e.target===document.getElementById('info-panel'))
+    document.getElementById('info-panel').classList.add('hidden');
+}
+addEventListener('keydown',e=>{
+  if(e.key==='Escape')document.getElementById('info-panel').classList.add('hidden');
+});
+
+function openInstr(){document.getElementById('instructions').classList.add('show');}
+function closeInstr(){
+  document.getElementById('instructions').classList.remove('show');
+  // Only start the scene properly after first close
+  if(!started){
+    started=true;
+    activeObj.position.set(stSide[0]*CRATE_X,CRATE_FLOOR_Y,stZ[0]);
+    showPanel(0);updateNav();
+    stSpots[0].intensity=155;
+    setStatus('CLICK A STATION TO BEGIN');
+    labelEls.forEach(el=>el.style.opacity='1');
+  }
+}
+
+function startPortfolio(){
+  document.getElementById('intro').classList.add('fade');
+  setTimeout(()=>{
+    document.getElementById('intro').style.display='none';
+    // Show instructions before starting
+    openInstr();
+  },700);
+}
+
+// ══════════════════════════════════════════════════════
+// CAMERA
+// ══════════════════════════════════════════════════════
+let camTargetZ=stZ[0],camZ=stZ[0],camAng=0.12,camDist=11;
+let isDrag=false,lastMX=0;
+renderer.domElement.addEventListener('mousedown',e=>{isDrag=true;lastMX=e.clientX;});
+addEventListener('mouseup',()=>isDrag=false);
+addEventListener('mousemove',e=>{if(isDrag){camAng+=(e.clientX-lastMX)*0.004;lastMX=e.clientX;}});
+renderer.domElement.addEventListener('wheel',e=>{camDist=clamp(camDist+e.deltaY*0.014,6,22);});
+renderer.domElement.addEventListener('touchstart',e=>{isDrag=true;lastMX=e.touches[0].clientX;},{passive:true});
+addEventListener('touchend',()=>isDrag=false);
+addEventListener('touchmove',e=>{if(isDrag){camAng+=(e.touches[0].clientX-lastMX)*0.004;lastMX=e.touches[0].clientX;}},{passive:true});
+
+// ══════════════════════════════════════════════════════
+// RENDER LOOP
+// ══════════════════════════════════════════════════════
+let lastT=0;
+(function render(ts){
+  requestAnimationFrame(render);
+  const dt=clamp((ts-lastT)/1000,0,0.05);lastT=ts;
+
+  if(!animating){
+    arms.forEach(arm=>{
+      arm.ARM.j4z=arm.IDLE_S.j4z+Math.sin(ts*0.0009)*0.022;
+      arm.applyA();
+    });
+  }
+
+  // Belt animation
+  if(beltMoving){beltOffset+=beltDir*dt*3.5;}
+  beltStripes.forEach((s,i)=>{
+    const frac=((i/NUM_STRIPES+beltOffset/BELT_LEN)%1+1)%1;
+    s.position.z=BELT_Z0+frac*BELT_LEN;
+  });
+
+  // Station spot breathe
+  stSpots.forEach((sp,i)=>{
+    if(i===curSt&&sp.intensity>8)sp.intensity=148+Math.sin(ts*0.0022)*18;
+  });
+
+  // Payload pulse
+  placedCubes.forEach((p,i)=>{
+    if(p.visible)p.material.emissiveIntensity=0.36+Math.sin(ts*0.0020+i)*0.14;
+  });
+  activeObj.material.emissiveIntensity=0.52+Math.sin(ts*0.006)*0.14;
+
+  // Camera follows curSt Z
+  camTargetZ=stZ[curSt];
+  camZ+=(camTargetZ-camZ)*0.045;
+  camera.position.set(Math.sin(camAng)*camDist,7,camZ+Math.cos(camAng)*camDist);
+  camera.lookAt(0,1.5,camZ);
+
+  updateLabels();
+  renderer.render(scene,camera);
+})(0);
+
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>
